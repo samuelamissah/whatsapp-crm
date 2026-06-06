@@ -13,6 +13,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Customer = {
   id: string;
@@ -284,8 +285,13 @@ function CustomerTableRow({
           </div>
 
           <div>
-            <p className="font-bold text-slate-950">{customer.name}</p>
-            <p className="mt-0.5 text-xs text-slate-500">Saved customer</p>
+            <Link
+  href={`/customers/${customer.id}`}
+  className="font-bold text-slate-950 transition hover:text-[#0f7a3b]"
+>
+  {customer.name}
+</Link>
+            <p className="mt-0.5 text-xs text-slate-500">Customer Profile</p>
           </div>
         </div>
       </td>
@@ -343,7 +349,12 @@ function CustomerMobileCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-bold text-slate-950">{customer.name}</p>
+              <Link
+  href={`/customers/${customer.id}`}
+  className="font-bold text-slate-950 transition hover:text-[#0f7a3b]"
+>
+  {customer.name}
+</Link>
               <p className="mt-1 text-xs text-slate-500">
                 Customer #{index + 1}
               </p>
