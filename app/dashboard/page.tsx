@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   return (
     <AppShell>
       <div className="space-y-7">
-        <section className="rounded-[2rem] border border-slate-200 bg-[#f7f8f4] p-6">
+        <section className="rounded-[2rem] border border-slate-200 bg-[#f7f8f4] p-6 transition-shadow hover:shadow-md">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
               <p className="text-sm font-semibold text-emerald-700">
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/customers"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0f7a3b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0b6230]"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#0f7a3b] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#0b6230] hover:shadow-md hover:shadow-[#0f7a3b]/20 active:scale-95"
               >
                 <Plus size={17} />
                 Customer
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/orders"
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800 hover:shadow-md active:scale-95"
               >
                 <Plus size={17} />
                 Order

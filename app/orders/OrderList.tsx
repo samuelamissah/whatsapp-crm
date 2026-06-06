@@ -165,11 +165,13 @@ export default function OrderList({
       </div>
 
       {filteredOrders.length === 0 ? (
-        <EmptyState
-          hasOrders={initialOrders.length > 0}
-          canCreate={customers.length > 0}
-          onAdd={() => setIsModalOpen(true)}
-        />
+        <div className="flex flex-col items-center justify-center p-12 text-center">
+          <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-slate-50 text-slate-400">
+            <PackageCheck size={24} />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">No orders yet</h3>
+          <p className="mt-1 text-sm text-slate-500">Create your first order to start tracking revenue.</p>
+        </div>
       ) : (
         <>
           <div className="hidden overflow-x-auto lg:block">
