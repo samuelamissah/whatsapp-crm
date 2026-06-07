@@ -32,6 +32,7 @@ type Order = {
   created_at?: string;
   customers?: {
     name: string;
+    phone?: string;
   };
 };
 
@@ -54,6 +55,7 @@ export default function OrderList({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -109,6 +111,36 @@ export default function OrderList({
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleUpdateStatus(orderId: string, newStatus: Order["status"]) {
+    if (updatingId) return;
+    
+    setUpdatingId(orderId);
+    
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: orderId,
+          status: newStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Could not update order status.");
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -184,12 +216,19 @@ export default function OrderList({
                   <th className="px-6 py-4 font-bold">Amount</th>
                   <th className="px-6 py-4 font-bold">Status</th>
                   <th className="px-6 py-4 font-bold">Date</th>
+                  <th className="px-6 py-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-100">
                 {filteredOrders.map((order, index) => (
-                  <OrderTableRow key={order.id} order={order} index={index} />
+                  <OrderTableRow 
+                    key={order.id} 
+                    order={order} 
+                    index={index} 
+                    onUpdateStatus={handleUpdateStatus}
+                    isUpdating={updatingId === order.id}
+                  />
                 ))}
               </tbody>
             </table>
@@ -197,7 +236,13 @@ export default function OrderList({
 
           <div className="divide-y divide-slate-100 lg:hidden">
             {filteredOrders.map((order, index) => (
-              <OrderMobileCard key={order.id} order={order} index={index} />
+              <OrderMobileCard 
+                key={order.id} 
+                order={order} 
+                index={index} 
+                onUpdateStatus={handleUpdateStatus}
+                isUpdating={updatingId === order.id}
+              />
             ))}
           </div>
         </>
@@ -343,7 +388,21 @@ export default function OrderList({
   );
 }
 
-function OrderTableRow({ order, index }: { order: Order; index: number }) {
+function OrderTableRow({ 
+  order, 
+  index,
+  onUpdateStatus,
+  isUpdating
+}: { 
+  order: Order; 
+  index: number;
+  onUpdateStatus: (id: string, status: Order["status"]) => void;
+  isUpdating: boolean;
+}) {
+  const customerPhone = order.customers?.phone || "";
+  const reminderMessage = `Hi ${order.customers?.name || "there"}, just a reminder about your pending payment of GHS ${order.amount} for the ${order.item}. Let me know if you need any help!`;
+  const whatsappUrl = `https://wa.me/${customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(reminderMessage)}`;
+
   return (
     <tr className="transition hover:bg-[#fafbf7]">
       <td className="px-6 py-5 text-sm font-semibold text-slate-400">
@@ -385,11 +444,59 @@ function OrderTableRow({ order, index }: { order: Order; index: number }) {
           {formatDate(order.created_at)}
         </div>
       </td>
+
+      <td className="px-6 py-5 text-right">
+        <div className="flex items-center justify-end gap-2">
+          {order.status === "pending" && (
+            <>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-xl bg-[#0f7a3b]/10 px-3 py-1.5 text-xs font-bold text-[#0f7a3b] transition hover:bg-[#0f7a3b]/20"
+                title="Send WhatsApp Reminder"
+              >
+                Remind
+              </a>
+              <button
+                onClick={() => onUpdateStatus(order.id, "paid")}
+                disabled={isUpdating}
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "Mark Paid"}
+              </button>
+            </>
+          )}
+          {order.status === "paid" && (
+            <button
+              onClick={() => onUpdateStatus(order.id, "delivered")}
+              disabled={isUpdating}
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+            >
+              {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "Mark Delivered"}
+            </button>
+          )}
+        </div>
+      </td>
     </tr>
   );
 }
 
-function OrderMobileCard({ order, index }: { order: Order; index: number }) {
+function OrderMobileCard({ 
+  order, 
+  index,
+  onUpdateStatus,
+  isUpdating
+}: { 
+  order: Order; 
+  index: number;
+  onUpdateStatus: (id: string, status: Order["status"]) => void;
+  isUpdating: boolean;
+}) {
+  const customerPhone = order.customers?.phone || "";
+  const reminderMessage = `Hi ${order.customers?.name || "there"}, just a reminder about your pending payment of GHS ${order.amount} for the ${order.item}. Let me know if you need any help!`;
+  const whatsappUrl = `https://wa.me/${customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(reminderMessage)}`;
+
   return (
     <div className="p-5">
       <div className="flex items-start justify-between gap-3">
@@ -411,6 +518,39 @@ function OrderMobileCard({ order, index }: { order: Order; index: number }) {
             value={`GHS ${Number(order.amount || 0).toLocaleString()}`}
           />
           <InfoRow label="Date" value={formatDate(order.created_at)} />
+        </div>
+        
+        <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+          {order.status === "pending" && (
+            <>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center rounded-xl bg-[#0f7a3b]/10 px-3 py-2 text-sm font-bold text-[#0f7a3b] transition hover:bg-[#0f7a3b]/20"
+              >
+                Remind on WhatsApp
+              </a>
+              <button
+                onClick={() => onUpdateStatus(order.id, "paid")}
+                disabled={isUpdating}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                {isUpdating && <Loader2 size={14} className="animate-spin" />}
+                Mark as Paid
+              </button>
+            </>
+          )}
+          {order.status === "paid" && (
+            <button
+              onClick={() => onUpdateStatus(order.id, "delivered")}
+              disabled={isUpdating}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-3 py-2 text-sm font-bold text-slate-800 transition hover:bg-slate-300 disabled:opacity-50"
+            >
+              {isUpdating && <Loader2 size={14} className="animate-spin" />}
+              Mark as Delivered
+            </button>
+          )}
         </div>
       </div>
     </div>

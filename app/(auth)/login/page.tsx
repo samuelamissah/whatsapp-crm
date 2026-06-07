@@ -42,7 +42,13 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const superadminEmail = process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "superadmin@crm.com";
+    if (email.trim().toLowerCase() === superadminEmail) {
+      router.push("/superadmin/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
+    
     router.refresh();
   }
 

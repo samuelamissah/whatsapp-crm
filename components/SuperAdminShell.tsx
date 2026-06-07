@@ -3,17 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, ShoppingBag, MessageCircle, Menu, X, UserCircle, Settings } from "lucide-react";
+import { LayoutDashboard, MessageCircle, Menu, X, UserCircle, Settings } from "lucide-react";
 import LogoutButton from "./LogoutButton";
-import { FileText } from "lucide-react";
-import { BarChart3 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-
 
 // 15 minutes of inactivity before auto-logout
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
 
-export default function AppShell({ children, workspaceName }: { children: React.ReactNode, workspaceName?: string }) {
+export default function SuperAdminShell({ children, userEmail }: { children: React.ReactNode, userEmail?: string }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -35,10 +32,8 @@ export default function AppShell({ children, workspaceName }: { children: React.
       }, INACTIVITY_TIMEOUT);
     };
 
-    // Set initial timer
     resetTimer();
 
-    // Events that reset the inactivity timer
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     events.forEach(event => {
@@ -58,7 +53,7 @@ export default function AppShell({ children, workspaceName }: { children: React.
   const getLinkClass = (path: string) => {
     return `flex items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
       isActive(path)
-        ? "bg-green-50 text-green-700 font-semibold"
+        ? "bg-indigo-50 text-indigo-700 font-semibold"
         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
     }`;
   };
@@ -68,10 +63,10 @@ export default function AppShell({ children, workspaceName }: { children: React.
       {/* Mobile Header */}
       <div className="sticky top-0 z-40 flex items-center justify-between border-b bg-white p-4 md:hidden">
         <div className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-green-600 text-white">
-            <MessageCircle size={16} />
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white">
+            <Settings size={16} />
           </div>
-          <h1 className="text-lg text-black font-bold truncate max-w-[150px]">{workspaceName || "Merchant CRM"}</h1>
+          <h1 className="text-lg text-black font-bold truncate max-w-[150px]">SuperAdmin</h1>
         </div>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -84,14 +79,14 @@ export default function AppShell({ children, workspaceName }: { children: React.
       {/* Sidebar - Desktop & Mobile */}
       <aside className={`fixed left-0 top-0 z-50 h-full w-64 flex-col border-r bg-white p-6 transition-transform duration-300 md:flex md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="mb-10 flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-600 text-white shadow-sm">
-            <MessageCircle size={24} />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-sm">
+            <Settings size={24} />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-extrabold text-slate-900" title={workspaceName || "Merchant CRM"}>
-              {workspaceName || "Merchant CRM"}
+            <h1 className="truncate text-xl font-extrabold text-slate-900" title="SuperAdmin Portal">
+              SuperAdmin
             </h1>
-            <p className="truncate text-xs font-medium text-slate-500">WhatsApp Sales Control</p>
+            <p className="truncate text-xs font-medium text-slate-500">System Control</p>
           </div>
         </div>
 
@@ -108,51 +103,33 @@ export default function AppShell({ children, workspaceName }: { children: React.
         <nav className="flex-1 space-y-2 text-sm font-medium">
           <Link 
             onClick={() => setIsMobileMenuOpen(false)}
-            className={getLinkClass("/dashboard")}
-            href="/dashboard"
+            className={getLinkClass("/superadmin/dashboard")}
+            href="/superadmin/dashboard"
           >
             <LayoutDashboard size={18} /> Dashboard
           </Link>
-          <Link 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={getLinkClass("/customers")}
-            href="/customers"
-          >
-            <Users size={18} /> Customers
-          </Link>
-          <Link 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={getLinkClass("/orders")}
-            href="/orders"
-          >
-            <ShoppingBag size={18} /> Orders
-          </Link>
 
           <Link
-            className={getLinkClass("/analytics")}
-            href="/analytics"
+            className={getLinkClass("/superadmin/whatsapp")}
+            href="/superadmin/whatsapp"
           >
-            <BarChart3 size={18} />
-            Analytics
+            <MessageCircle size={18} /> 
+            WhatsApp Settings
           </Link>
-          <Link
-  className={getLinkClass("/templates")}
-  href="/templates"
->
-  <FileText size={18} />
-  Templates
-</Link>
-
+          
           <Link 
             onClick={() => setIsMobileMenuOpen(false)}
-            className={getLinkClass("/profile")}
-            href="/profile"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            href="/dashboard"
           >
-            <UserCircle size={18} /> Profile
+            <UserCircle size={18} /> User Portal
           </Link>
         </nav>
         
         <div className="mt-auto border-t pt-4">
+          <div className="mb-4 px-3">
+            <p className="text-xs text-slate-500 truncate" title={userEmail}>{userEmail}</p>
+          </div>
           <LogoutButton />
         </div>
       </aside>

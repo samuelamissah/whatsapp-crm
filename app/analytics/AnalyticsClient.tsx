@@ -15,6 +15,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  LabelList,
 } from "recharts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -161,26 +162,19 @@ export default function AnalyticsClient({
   }, [customers, period]);
 
   const debtData = useMemo(() => {
-    const filteredDebts = filterByPeriod(debts, period);
+    const totalDebt = filteredOrders
+      .filter((order) => order.status === "pending")
+      .reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
-    const totalDebt = filteredDebts
-      .filter((debt) => debt.status !== "paid" && debt.status !== "cancelled")
-      .reduce(
-        (sum, debt) =>
-          sum + (Number(debt.amount || 0) - Number(debt.amount_paid || 0)),
-        0
-      );
-
-    const collectedDebt = filteredDebts.reduce(
-      (sum, debt) => sum + Number(debt.amount_paid || 0),
-      0
-    );
+    const collectedDebt = filteredOrders
+      .filter((order) => order.status === "paid" || order.status === "delivered")
+      .reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
     return [
       { name: "Outstanding", value: totalDebt },
       { name: "Collected", value: collectedDebt },
     ];
-  }, [debts, period]);
+  }, [filteredOrders]);
 
   return (
     <div className="space-y-6">
@@ -274,7 +268,9 @@ export default function AnalyticsClient({
                 contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
               />
               <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-              <Bar dataKey="revenue" name="Revenue" fill="#0f7a3b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="revenue" name="Revenue" fill="#0f7a3b" radius={[6, 6, 0, 0]}>
+                <LabelList dataKey="revenue" position="top" formatter={(val: any) => `GHS ${Number(val).toLocaleString()}`} style={{ fontSize: '10px', fill: '#64748b' }} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -293,7 +289,9 @@ export default function AnalyticsClient({
                 contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
               />
               <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-              <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                <LabelList dataKey="revenue" position="top" formatter={(val: any) => `GHS ${Number(val).toLocaleString()}`} style={{ fontSize: '10px', fill: '#64748b' }} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>

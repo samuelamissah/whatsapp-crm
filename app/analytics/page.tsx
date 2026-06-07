@@ -55,13 +55,9 @@ export default async function AnalyticsPage() {
     .filter((order) => order.status === "pending")
     .reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
-  const totalDebt = safeDebts
-    .filter((debt) => debt.status !== "paid" && debt.status !== "cancelled")
-    .reduce(
-      (sum, debt) =>
-        sum + (Number(debt.amount || 0) - Number(debt.amount_paid || 0)),
-      0
-    );
+  const totalDebt = safeOrders
+    .filter((order) => order.status === "pending")
+    .reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
   const paidOrders = safeOrders.filter(
     (order) => order.status === "paid" || order.status === "delivered"

@@ -19,6 +19,12 @@ export default async function DashboardPage() {
   const { workspace, user } = await getCurrentWorkspace();
 
   if (!user) redirect("/login");
+
+  const superadminEmail = process.env.SUPERADMIN_EMAIL || "superadmin@crm.com";
+  if (user.email === superadminEmail) {
+    redirect("/superadmin/dashboard");
+  }
+
   if (!workspace) redirect("/onboarding");
 
   const supabase = await createSupabaseServerClient();

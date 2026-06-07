@@ -18,6 +18,7 @@ import {
   Tags,
   UserRound,
 } from "lucide-react";
+import CustomerTemplateSender from "./CustomerTemplateSender";
 
 export default async function CustomerProfilePage({
   params,
@@ -33,7 +34,7 @@ export default async function CustomerProfilePage({
 
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: customer }, { data: orders }, { data: debts }, { data: followUps }] =
+  const [{ data: customer }, { data: orders }, { data: followUps }, { data: templates }] =
     await Promise.all([
       supabase
         .from("customers")
@@ -50,18 +51,17 @@ export default async function CustomerProfilePage({
         .order("created_at", { ascending: false }),
 
       supabase
-        .from("customer_debts")
-        .select("id, description, amount, amount_paid, status, due_date, created_at")
-        .eq("customer_id", id)
-        .eq("workspace_id", workspace.id)
-        .order("created_at", { ascending: false }),
-
-      supabase
         .from("follow_ups")
         .select("id, title, note, remind_at, status, created_at")
         .eq("customer_id", id)
         .eq("workspace_id", workspace.id)
         .order("remind_at", { ascending: true }),
+
+      supabase
+        .from("whatsapp_templates")
+        .select("id, title, body, category")
+        .eq("workspace_id", workspace.id)
+        .order("created_at", { ascending: false }),
     ]);
 
   if (!customer) notFound();
@@ -74,13 +74,9 @@ export default async function CustomerProfilePage({
       .reduce((sum, order) => sum + Number(order.amount || 0), 0) || 0;
 
   const pendingDebt =
-    debts
-      ?.filter((debt) => debt.status !== "paid" && debt.status !== "cancelled")
-      .reduce(
-        (sum, debt) =>
-          sum + (Number(debt.amount || 0) - Number(debt.amount_paid || 0)),
-        0
-      ) || 0;
+    orders
+      ?.filter((order) => order.status === "pending")
+      .reduce((sum, order) => sum + Number(order.amount || 0), 0) || 0;
 
   const pendingFollowUps =
     followUps?.filter((followUp) => followUp.status === "pending").length || 0;
@@ -106,7 +102,7 @@ export default async function CustomerProfilePage({
 
                 <div>
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-100">
-                    <Star size={14} />
+               
                     {customer.loyalty_status || "regular"} customer
                   </div>
 
@@ -165,6 +161,7 @@ export default async function CustomerProfilePage({
           <div className="space-y-6">
             <CustomerProfileEditor customer={customer} />
             <CustomerActions customerId={customer.id} />
+            <CustomerTemplateSender customer={customer} templates={templates || []} />
             <Card
               icon={NotebookText}
               title="Notes"
@@ -259,26 +256,25 @@ export default async function CustomerProfilePage({
               title="Debt tracking"
               subtitle="Outstanding payments for this customer."
             >
-              {!debts?.length ? (
+              {!orders?.filter(o => o.status === "pending").length ? (
                 <p className="text-sm text-slate-500">No debts recorded.</p>
               ) : (
                 <div className="space-y-3">
-                  {debts.map((debt) => {
-                    const balance =
-                      Number(debt.amount || 0) - Number(debt.amount_paid || 0);
+                  {orders.filter(o => o.status === "pending").map((debtOrder) => {
+                    const balance = Number(debtOrder.amount || 0);
 
                     return (
                       <div
-                        key={debt.id}
+                        key={debtOrder.id}
                         className="rounded-2xl border border-slate-200 bg-[#fafbf7] p-4"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <p className="font-bold text-slate-950">
-                              {debt.description}
+                              {debtOrder.item}
                             </p>
                             <p className="mt-1 text-sm text-slate-500">
-                              Due: {debt.due_date || "No due date"}
+                              Date: {formatDate(debtOrder.created_at)}
                             </p>
                           </div>
 
@@ -287,7 +283,7 @@ export default async function CustomerProfilePage({
                               GHS {balance.toLocaleString()}
                             </p>
                             <p className="mt-1 text-xs capitalize text-slate-500">
-                              {debt.status}
+                              {debtOrder.status}
                             </p>
                           </div>
                         </div>

@@ -24,7 +24,7 @@ export default async function OrdersPage() {
   const [{ data: orders }, { data: customers }] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, item, amount, status, customer_id, created_at, customers(name)")
+      .select("id, item, amount, status, customer_id, created_at, customers(name, phone)")
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false }),
 
