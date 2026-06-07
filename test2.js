@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 const env = fs.readFileSync('.env.local', 'utf-8');
 const urlMatch = env.match(/NEXT_PUBLIC_SUPABASE_URL=(.*)/);
 const keyMatch = env.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=(.*)/);

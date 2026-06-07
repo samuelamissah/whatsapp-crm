@@ -88,10 +88,10 @@ export default function AppShell({ children, workspaceName }: { children: React.
             <MessageCircle size={24} />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-extrabold text-slate-900" title={workspaceName || "Merchant CRM"}>
+            <h1 className="break-words whitespace-normal text-xl font-extrabold text-slate-900 leading-tight">
               {workspaceName || "Merchant CRM"}
             </h1>
-            <p className="truncate text-xs font-medium text-slate-500">WhatsApp Sales Control</p>
+            <p className="truncate text-xs font-medium text-slate-500 mt-0.5">WhatsApp Sales Control</p>
           </div>
         </div>
 

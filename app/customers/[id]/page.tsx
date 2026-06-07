@@ -5,6 +5,9 @@ import { getCurrentWorkspace } from "@/lib/workspace";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import CustomerProfileEditor from "./CustomerProfileEditor";
 import CustomerActions from "./CustomerActions";
+import AIMessageGenerator from "./AIMessageGenerator";
+import CustomerTimeline from "./CustomerTimeline";
+
 import {
   ArrowLeft,
   Banknote,
@@ -34,7 +37,7 @@ export default async function CustomerProfilePage({
 
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: customer }, { data: orders }, { data: followUps }, { data: templates }] =
+  const [{ data: customer }, { data: orders }, { data: followUps }, { data: templates }, { data: timeline }] =
     await Promise.all([
       supabase
         .from("customers")
@@ -62,6 +65,14 @@ export default async function CustomerProfilePage({
         .select("id, title, body, category")
         .eq("workspace_id", workspace.id)
         .order("created_at", { ascending: false }),
+
+    supabase
+  .from("customer_timeline")
+  .select("id, type, title, description, created_at")
+  .eq("customer_id", id)
+  .eq("workspace_id", workspace.id)
+  .order("created_at", { ascending: false }),
+
     ]);
 
   if (!customer) notFound();
@@ -82,7 +93,7 @@ export default async function CustomerProfilePage({
     followUps?.filter((followUp) => followUp.status === "pending").length || 0;
 
   return (
-    <AppShell>
+    <AppShell workspaceName={workspace.name}>
       <div className="space-y-6">
         <Link
           href="/customers"
@@ -161,6 +172,8 @@ export default async function CustomerProfilePage({
           <div className="space-y-6">
             <CustomerProfileEditor customer={customer} />
             <CustomerActions customerId={customer.id} />
+            <AIMessageGenerator customer={customer} />
+            <CustomerTimeline items={timeline || []} />
             <CustomerTemplateSender customer={customer} templates={templates || []} />
             <Card
               icon={NotebookText}
