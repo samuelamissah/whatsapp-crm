@@ -52,7 +52,7 @@ export default async function OrdersPage() {
       .reduce((sum, order) => sum + (Number(order.amount) || 0), 0) || 0;
 
   return (
-    <AppShell>
+    <AppShell workspaceName={workspace.name}>
       <div className="space-y-6">
         <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
           <div className="bg-slate-950 p-6 text-white">

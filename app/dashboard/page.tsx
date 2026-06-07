@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   const totalOrders = orders?.length || 0;
 
   return (
-    <AppShell>
+    <AppShell workspaceName={workspace.name}>
       <div className="space-y-7">
         <section className="rounded-[2rem] border border-slate-200 bg-[#f7f8f4] p-6 transition-shadow hover:shadow-md">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">

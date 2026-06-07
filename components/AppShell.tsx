@@ -1,14 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Users, ShoppingBag, MessageCircle, Menu, X, UserCircle } from "lucide-react";
 import LogoutButton from "./LogoutButton";
+import { FileText } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+// 15 minutes of inactivity before auto-logout
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+
+export default function AppShell({ children, workspaceName }: { children: React.ReactNode, workspaceName?: string }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
+
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }, [router, supabase.auth]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        handleLogout();
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Set initial timer
+    resetTimer();
+
+    // Events that reset the inactivity timer
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [handleLogout]);
 
   const isActive = (path: string) => pathname?.startsWith(path);
 
@@ -28,7 +70,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="grid h-8 w-8 place-items-center rounded-lg bg-green-600 text-white">
             <MessageCircle size={16} />
           </div>
-          <h1 className="text-lg font-bold">Merchant CRM</h1>
+          <h1 className="text-lg text-black font-bold truncate max-w-[150px]">{workspaceName || "Merchant CRM"}</h1>
         </div>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -40,13 +82,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar - Desktop & Mobile */}
       <aside className={`fixed left-0 top-0 z-50 h-full w-64 flex-col border-r bg-white p-6 transition-transform duration-300 md:flex md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="mb-10 flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-green-600 text-white">
-            <MessageCircle size={20} />
+        <div className="mb-10 flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-600 text-white shadow-sm">
+            <MessageCircle size={24} />
           </div>
-          <div>
-            <h1 className="text-lg font-bold">Merchant CRM</h1>
-            <p className="text-xs text-slate-500">WhatsApp Sales Control</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl font-extrabold text-slate-900" title={workspaceName || "Merchant CRM"}>
+              {workspaceName || "Merchant CRM"}
+            </h1>
+            <p className="truncate text-xs font-medium text-slate-500">WhatsApp Sales Control</p>
           </div>
         </div>
 
@@ -82,6 +126,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <ShoppingBag size={18} /> Orders
           </Link>
+
+          <Link
+            className={getLinkClass("/analytics")}
+            href="/analytics"
+          >
+            <BarChart3 size={18} />
+            Analytics
+          </Link>
+          <Link
+  className={getLinkClass("/templates")}
+  href="/templates"
+>
+  <FileText size={18} />
+  Templates
+</Link>
           <Link 
             onClick={() => setIsMobileMenuOpen(false)}
             className={getLinkClass("/profile")}

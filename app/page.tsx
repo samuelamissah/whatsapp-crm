@@ -20,7 +20,7 @@ export default function HomePage() {
             <MessageCircle size={21} />
           </div>
           <div>
-            <p className="text-sm font-bold leading-none">Merchant CRM</p>
+            <p className="text-sm  text-black font-bold leading-none">Merchant CRM</p>
             <p className="mt-1 text-xs text-slate-500">For WhatsApp sellers</p>
           </div>
         </Link>
